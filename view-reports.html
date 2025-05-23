@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View All Daily Reports - Hariom Construction Pvt. Ltd.</title>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        /* General Body Styling - Keep consistent with index.html */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #eef2f6;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        /* Container Styling - Keep consistent */
+        .container {
+            max-width: 900px;
+            margin: 30px auto;
+            background-color: #ffffff;
+            padding: 40px 50px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        /* Header Section - Keep consistent */
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 25px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        header img {
+            max-height: 70px;
+            margin-bottom: 15px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        header h1 {
+            margin: 8px 0 2px;
+            color: #2c3e50;
+            font-size: 2.2em;
+            font-weight: 600;
+        }
+        header h2 {
+            color: #555;
+            font-size: 1.3em;
+            font-weight: 400;
+            margin-top: 0;
+        }
+
+        /* Navigation Bar Styling - Keep consistent */
+        nav {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        nav a {
+            text-decoration: none;
+            color: #007bff;
+            font-weight: 600;
+            margin: 0 15px;
+            padding: 8px 15px;
+            border-radius: 5px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        nav a:hover {
+            background-color: #007bff;
+            color: white;
+        }
+        nav a.active {
+            background-color: #007bff;
+            color: white;
+            pointer-events: none; /* Make active link non-clickable */
+        }
+
+        /* Report List Specific Styling */
+        #reportsList {
+            margin-top: 30px;
+        }
+
+        .report-item {
+            background-color: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            display: flex; /* Use flexbox for layout */
+            justify-content: space-between; /* Space out content and button */
+            align-items: center; /* Vertically align items */
+        }
+
+        .report-summary h3 {
+            margin-top: 0;
+            margin-bottom: 8px;
+            color: #34495e;
+            font-size: 1.3em;
+        }
+
+        .report-summary p {
+            margin: 0 0 5px 0;
+            color: #555;
+        }
+
+        .report-summary small {
+            color: #888;
+            font-size: 0.9em;
+        }
+
+        .view-details-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 15px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.3s ease;
+        }
+
+        .view-details-btn:hover {
+            background-color: #0056b3;
+        }
+
+        .no-reports {
+            text-align: center;
+            color: #6c757d;
+            font-style: italic;
+            padding: 50px 0;
+        }
+
+        /* Modal for Detailed Report View */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+            padding-top: 60px;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto; /* 5% from the top and centered */
+            padding: 30px;
+            border: 1px solid #888;
+            border-radius: 10px;
+            width: 80%; /* Could be more responsive */
+            max-width: 700px;
+            position: relative;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .modal-content h3 {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .modal-content p {
+            margin-bottom: 10px;
+        }
+        .modal-content p strong {
+            color: #2c3e50;
+            display: inline-block;
+            min-width: 150px; /* Align labels */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <img src="https://via.placeholder.com/200x80?text=Your+Company+Logo" alt="Company Logo" id="company-logo">
+            <h1 id="company-name">Hariom Construction Pvt. Ltd.</h1>
+            <h2 id="project-name">Vyara site 1 construction</h2>
+        </header>
+
+        <nav>
+            <a href="index.html">Submit Daily Report</a>
+            <a href="view-reports.html" class="active">View All Reports</a>
+        </nav>
+
+        <h2 style="text-align: center; margin-top: 30px; color: #34495e;">All Daily Reports</h2>
+
+        <div id="reportsList">
+            <p class="no-reports">Loading reports...</p>
+        </div>
+    </div>
+
+    <div id="reportDetailModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h3 id="modalReportDate"></h3>
+            <p><strong>Work Done:</strong> <span id="modalWorkDone"></span></p>
+            <p><strong>Image Link:</strong> <span id="modalImageLink"></span></p>
+            <p><strong>Tomorrow's Planning:</strong> <span id="modalTomorrowPlanning"></span></p>
+            <p><strong>Material Needs:</strong> <span id="modalMaterialNeeds"></span></p>
+            <p><strong>Issues on Site:</strong> <span id="modalIssuesOnSite"></span></p>
+            <p><strong>Remarks:</strong> <span id="modalRemarks"></span></p>
+            <p><strong>Checking Call Notes:</strong> <span id="modalCheckingCallNotes"></span></p>
+            <hr>
+            <p><strong>Report Checked By:</strong> <span id="modalCheckedBy">Not Checked</span></p>
+            <p><strong>Checked Date:</strong> <span id="modalCheckedDate">N/A</span></p>
+        </div>
+    </div>
+
+
+    <script>
+        // --- Firebase Configuration and Initialization ---
+        // IMPORTANT: Replace the values below with your actual Firebase project config!
+        const firebaseConfig = {
+            apiKey: "AIzaSyBO6c33DK2bhzPBrNiX6SeXuN2LMmLg3V8",
+            authDomain: "cnst-management.firebaseapp.com",
+            projectId: "cnst-management",
+            storageBucket: "cnst-management.firebasestorage.app",
+            messagingSenderId: "272780333903",
+            appId: "1:272780333903:web:3ce6a684383c43d8f26b3a"
+        };
+        
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+
+        // Initialize Cloud Firestore and get a reference to the service
+        const db = firebase.firestore(app);
+        // --- End Firebase Config ---
+
+        // JavaScript to load reports
+        document.addEventListener('DOMContentLoaded', () => {
+            // Set active class on current page's nav link
+            const currentPath = window.location.pathname.split("/").pop();
+            const navLinks = document.querySelectorAll('nav a');
+            navLinks.forEach(link => {
+                if (link.getAttribute('href') === currentPath) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+
+            const reportsListDiv = document.getElementById('reportsList');
+            const reportDetailModal = document.getElementById('reportDetailModal');
+            const closeButton = document.querySelector('.close-button');
+
+            // Function to fetch and display reports
+            const fetchReports = () => {
+                reportsListDiv.innerHTML = '<p class="no-reports">Loading reports...</p>'; // Show loading message
+
+                db.collection('dailyReports').orderBy('reportDate', 'desc').get()
+                    .then((querySnapshot) => {
+                        if (querySnapshot.empty) {
+                            reportsListDiv.innerHTML = '<p class="no-reports">No reports submitted yet.</p>';
+                            return;
+                        }
+
+                        reportsListDiv.innerHTML = ''; // Clear loading message
+
+                        querySnapshot.forEach((doc) => {
+                            const report = doc.data();
+                            const reportId = doc.id; // Get the document ID
+
+                            // Format the date
+                            const date = report.reportDate ? report.reportDate.toDate() : new Date(); // Convert Firestore Timestamp to Date object
+                            const formattedDate = date.toLocaleString('en-IN', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            });
+
+                            const reportItem = document.createElement('div');
+                            reportItem.classList.add('report-item');
+                            reportItem.innerHTML = `
+                                <div class="report-summary">
+                                    <h3>Report on ${formattedDate}</h3>
+                                    <p><strong>Work Done:</strong> ${report.workDone.substring(0, 100)}${report.workDone.length > 100 ? '...' : ''}</p>
+                                    <small>Submitted: ${report.submittedAt ? report.submittedAt.toDate().toLocaleString() : 'N/A'}</small>
+                                </div>
+                                <button class="view-details-btn" data-id="${reportId}">View Details</button>
+                            `;
+                            reportsListDiv.appendChild(reportItem);
+                        });
+
+                        // Add event listeners for "View Details" buttons
+                        document.querySelectorAll('.view-details-btn').forEach(button => {
+                            button.addEventListener('click', (e) => {
+                                const id = e.target.dataset.id;
+                                displayReportDetails(id);
+                            });
+                        });
+                    })
+                    .catch((error) => {
+                        console.error("Error fetching documents: ", error);
+                        reportsListDiv.innerHTML = '<p class="no-reports">Error loading reports. Please try again.</p>';
+                    });
+            };
+
+            // Function to display full report details in a modal
+            const displayReportDetails = (id) => {
+                db.collection('dailyReports').doc(id).get()
+                    .then((doc) => {
+                        if (doc.exists) {
+                            const report = doc.data();
+
+                            // Populate modal fields
+                            document.getElementById('modalReportDate').textContent = `Report on ${report.reportDate.toDate().toLocaleString('en-IN', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`;
+                            document.getElementById('modalWorkDone').textContent = report.workDone;
+                            document.getElementById('modalImageLink').innerHTML = report.imageLinks && report.imageLinks.length > 0 ? `<a href="${report.imageLinks[0]}" target="_blank">${report.imageLinks[0]}</a>` : 'N/A';
+                            document.getElementById('modalTomorrowPlanning').textContent = report.tomorrowPlanning;
+                            document.getElementById('modalMaterialNeeds').textContent = report.materialNeeds;
+                            document.getElementById('modalIssuesOnSite').textContent = report.issuesOnSite;
+                            document.getElementById('modalRemarks').textContent = report.remarks;
+                            document.getElementById('modalCheckingCallNotes').textContent = report.checkingCallNotes;
+
+                            // Manager checked by (future enhancement for actual input)
+                            document.getElementById('modalCheckedBy').textContent = report.checkedByName || 'Not Checked';
+                            document.getElementById('modalCheckedDate').textContent = report.checkedByDate ? report.checkedByDate.toDate().toLocaleString() : 'N/A';
+
+
+                            reportDetailModal.style.display = 'block'; // Show the modal
+                        } else {
+                            console.log("No such document!");
+                            alert("Report not found.");
+                        }
+                    })
+                    .catch((error) => {
+                        console.error("Error getting document:", error);
+                        alert("Error loading report details.");
+                    });
+            };
+
+            // Close modal functionality
+            closeButton.addEventListener('click', () => {
+                reportDetailModal.style.display = 'none';
+            });
+
+            window.addEventListener('click', (event) => {
+                if (event.target == reportDetailModal) {
+                    reportDetailModal.style.display = 'none';
+                }
+            });
+
+            // Initial fetch of reports when the page loads
+            fetchReports();
+        });
+    </script>
+</body>
+</html>

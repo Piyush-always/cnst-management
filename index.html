@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daily Site Report - Hariom Construction Pvt. Ltd.</title>
 
-    <!-- <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script> -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
@@ -34,7 +32,7 @@
         /* Header Section */
         header {
             text-align: center;
-            margin-bottom: 40px;
+            margin-bottom: 20px; /* Reduced margin to make space for nav */
             padding-bottom: 25px;
             border-bottom: 2px solid #e0e0e0; /* A cleaner divider */
         }
@@ -57,6 +55,33 @@
             font-weight: 400;
             margin-top: 0;
         }
+
+        /* Navigation Bar Styling (NEW) */
+        nav {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        nav a {
+            text-decoration: none;
+            color: #007bff; /* Primary link color */
+            font-weight: 600;
+            margin: 0 15px;
+            padding: 8px 15px;
+            border-radius: 5px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        nav a:hover {
+            background-color: #007bff;
+            color: white;
+        }
+        nav a.active {
+            background-color: #007bff;
+            color: white;
+            pointer-events: none; /* Make active link non-clickable */
+        }
+
 
         /* Form Group Styling - Making it less "form-like" */
         .form-group {
@@ -151,6 +176,11 @@
             <h2 id="project-name">Vyara site 1 construction</h2>
         </header>
 
+        <nav>
+            <a href="index.html" class="active">Submit Daily Report</a>
+            <a href="view-reports.html">View All Reports</a>
+        </nav>
+
         <form id="dailyReportForm">
             <div class="form-group">
                 <label for="dateTime">Date and Time:</label>
@@ -202,7 +232,6 @@
 
     <script>
         // --- Firebase Configuration and Initialization ---
-        // Your web app's Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyBO6c33DK2bhzPBrNiX6SeXuN2LMmLg3V8",
             authDomain: "cnst-management.firebaseapp.com",
@@ -211,8 +240,7 @@
             messagingSenderId: "272780333903",
             appId: "1:272780333903:web:3ce6a684383c43d8f26b3a"
         };
-
-
+        
         // Initialize Firebase
         const app = firebase.initializeApp(firebaseConfig);
 
@@ -231,8 +259,18 @@
             const hours = now.getHours().toString().padStart(2, '0');
             const minutes = now.getMinutes().toString().padStart(2, '0');
 
-            // Format for datetime-local input: YYYY-MM-DDTHH:MM
             dateTimeInput.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+
+            // Set active class on current page's nav link
+            const currentPath = window.location.pathname.split("/").pop();
+            const navLinks = document.querySelectorAll('nav a');
+            navLinks.forEach(link => {
+                if (link.getAttribute('href') === currentPath) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
         });
 
         // Form submission logic to save data to Firestore
