@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Site Report - Hariom Construction Pvt. Ltd.</title>
+
+    <!-- <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script> -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        /* General Body Styling */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #eef2f6; /* Light background for the page */
+            color: #333;
+            line-height: 1.6;
+        }
+
+        /* Container for the Report */
+        .container {
+            max-width: 900px; /* Slightly wider for a document feel */
+            margin: 30px auto;
+            background-color: #ffffff;
+            padding: 40px 50px; /* More padding for spaciousness */
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08); /* Softer shadow */
+        }
+
+        /* Header Section */
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 25px;
+            border-bottom: 2px solid #e0e0e0; /* A cleaner divider */
+        }
+        header img {
+            max-height: 70px; /* Slightly larger logo */
+            margin-bottom: 15px;
+            display: block; /* Center the image */
+            margin-left: auto;
+            margin-right: auto;
+        }
+        header h1 {
+            margin: 8px 0 2px;
+            color: #2c3e50;
+            font-size: 2.2em; /* Larger company name */
+            font-weight: 600;
+        }
+        header h2 {
+            color: #555;
+            font-size: 1.3em;
+            font-weight: 400;
+            margin-top: 0;
+        }
+
+        /* Form Group Styling - Making it less "form-like" */
+        .form-group {
+            margin-bottom: 25px; /* More space between sections */
+            padding: 15px 0; /* Internal padding for each section */
+            border-bottom: 1px dashed #e0e0e0; /* Subtle separator */
+        }
+        .form-group:last-of-type {
+            border-bottom: none; /* No border for the last one */
+            margin-bottom: 0;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 700; /* Bolder labels */
+            color: #34495e;
+            font-size: 1.1em;
+        }
+
+        input[type="text"],
+        input[type="url"],
+        input[type="datetime-local"],
+        textarea {
+            width: calc(100% - 24px); /* Account for padding and border */
+            padding: 12px;
+            border: 1px solid #c0c0c0; /* Softer border */
+            border-radius: 6px; /* Slightly more rounded */
+            box-sizing: border-box;
+            font-size: 1em;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease; /* Smooth transitions */
+            background-color: #fcfcfc; /* Light input background */
+        }
+
+        input[type="text"]:focus,
+        input[type="url"]:focus,
+        input[type="datetime-local"]:focus,
+        textarea:focus {
+            border-color: #007bff; /* Highlight on focus */
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25); /* Subtle glow */
+            outline: none; /* Remove default outline */
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px; /* Taller text areas for content */
+        }
+
+        small {
+            display: block; /* Make small text go to a new line */
+            margin-top: 5px;
+            color: #6a6a6a;
+            font-size: 0.85em;
+        }
+
+        /* Buttons Styling */
+        .buttons {
+            text-align: right;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px dashed #e0e0e0;
+        }
+        button {
+            padding: 12px 25px;
+            background-color: #28a745; /* Green for submit */
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1.05em;
+            font-weight: 600;
+            margin-left: 15px;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+        button[type="reset"] {
+            background-color: #6c757d; /* Grey for reset */
+        }
+        button:hover {
+            background-color: #218838; /* Darker green on hover */
+            transform: translateY(-2px); /* Slight lift */
+        }
+        button[type="reset"]:hover {
+            background-color: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <img src="https://via.placeholder.com/200x80?text=Your+Company+Logo" alt="Company Logo" id="company-logo">
+            <h1 id="company-name">Hariom Construction Pvt. Ltd.</h1>
+            <h2 id="project-name">Vyara site 1 construction</h2>
+        </header>
+
+        <form id="dailyReportForm">
+            <div class="form-group">
+                <label for="dateTime">Date and Time:</label>
+                <input type="datetime-local" id="dateTime" name="dateTime" required>
+            </div>
+
+            <div class="form-group">
+                <label for="workDone">Work Done Today:</label>
+                <textarea id="workDone" name="workDone" rows="5" placeholder="Describe tasks completed, progress made, specific achievements..." required></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="imageLink">Google Drive Pic Link (Optional):</label>
+                <input type="url" id="imageLink" name="imageLink" placeholder="e.g., https://drive.google.com/drive/folders/..." >
+                <small>Ensure the link is shareable for public viewing or specific access.</small>
+            </div>
+
+            <div class="form-group">
+                <label for="tomorrowPlanning">Tomorrow's Planning:</label>
+                <textarea id="tomorrowPlanning" name="tomorrowPlanning" rows="5" placeholder="Outline planned activities, upcoming tasks, preparations for tomorrow..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="materialNeeds">Material Needs:</label>
+                <textarea id="materialNeeds" name="materialNeeds" rows="3" placeholder="List materials required, quantities, and expected delivery..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="issuesOnSite">Issues on Site:</label>
+                <textarea id="issuesOnSite" name="issuesOnSite" rows="4" placeholder="Describe any challenges, roadblocks, safety concerns, or equipment malfunctions..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="remarks">Remarks:</label>
+                <textarea id="remarks" name="remarks" rows="3" placeholder="Any additional comments, observations, or general feedback..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="checkingCallNotes">Checking Call Notes:</label>
+                <textarea id="checkingCallNotes" name="checkingCallNotes" rows="2" placeholder="Notes from any checking calls..."></textarea>
+            </div>
+
+            <div class="buttons">
+                <button type="reset">Clear Form</button>
+                <button type="submit">Submit Report</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // --- Firebase Configuration and Initialization ---
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBO6c33DK2bhzPBrNiX6SeXuN2LMmLg3V8",
+            authDomain: "cnst-management.firebaseapp.com",
+            projectId: "cnst-management",
+            storageBucket: "cnst-management.firebasestorage.app",
+            messagingSenderId: "272780333903",
+            appId: "1:272780333903:web:3ce6a684383c43d8f26b3a"
+        };
+
+
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+
+        // Initialize Cloud Firestore and get a reference to the service
+        const db = firebase.firestore(app);
+        // --- End Firebase Config ---
+
+
+        // JavaScript to auto-populate date and time
+        document.addEventListener('DOMContentLoaded', () => {
+            const dateTimeInput = document.getElementById('dateTime');
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = (now.getMonth() + 1).toString().padStart(2, '0');
+            const day = now.getDate().toString().padStart(2, '0');
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+
+            // Format for datetime-local input: YYYY-MM-DDTHH:MM
+            dateTimeInput.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+        });
+
+        // Form submission logic to save data to Firestore
+        document.getElementById('dailyReportForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent default browser form submission
+
+            // Get form data
+            const dateTime = document.getElementById('dateTime').value;
+            const workDone = document.getElementById('workDone').value;
+            const imageLink = document.getElementById('imageLink').value; // Single link for now
+            const tomorrowPlanning = document.getElementById('tomorrowPlanning').value;
+            const materialNeeds = document.getElementById('materialNeeds').value;
+            const issuesOnSite = document.getElementById('issuesOnSite').value;
+            const remarks = document.getElementById('remarks').value;
+            const checkingCallNotes = document.getElementById('checkingCallNotes').value;
+
+            // Prepare data object for Firestore
+            const reportData = {
+                reportDate: new Date(dateTime), // Convert to Firestore Timestamp
+                workDone: workDone,
+                imageLinks: imageLink ? [imageLink] : [], // Store as an array, even if one link
+                tomorrowPlanning: tomorrowPlanning,
+                materialNeeds: materialNeeds,
+                issuesOnSite: issuesOnSite,
+                remarks: remarks,
+                checkingCallNotes: checkingCallNotes,
+                submittedAt: firebase.firestore.FieldValue.serverTimestamp() // Timestamp when saved
+            };
+
+            // Add data to Firestore 'dailyReports' collection
+            db.collection('dailyReports').add(reportData)
+            .then((docRef) => {
+                console.log("Document written with ID: ", docRef.id);
+                alert('Daily Report Submitted Successfully!');
+                document.getElementById('dailyReportForm').reset(); // Clear the form
+                // Re-populate date/time after reset
+                document.getElementById('dateTime').value = `${new Date().getFullYear()}-${(new Date().getMonth() + 1).toString().padStart(2, '0')}-${new Date().getDate().toString().padStart(2, '0')}T${new Date().getHours().toString().padStart(2, '0')}:${new Date().getMinutes().toString().padStart(2, '0')}`;
+            })
+            .catch((error) => {
+                console.error("Error adding document: ", error);
+                alert('Error submitting report. Please check your internet connection or try again.');
+            });
+        });
+    </script>
+</body>
+</html>
