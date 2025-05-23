@@ -8,6 +8,8 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+
     <style>
         /* General Body Styling - Keep consistent with index.html */
         body {
@@ -82,9 +84,37 @@
             pointer-events: none; /* Make active link non-clickable */
         }
 
-        /* Reports List Container (now primarily for table) */
-        #reportsList {
+        /* Page Title and Export Button Area */
+        .reports-header-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-top: 30px;
+            margin-bottom: 20px;
+        }
+        .reports-header-controls h2 {
+            margin: 0;
+            color: #34495e;
+            font-size: 1.8em;
+        }
+        .export-btn {
+            background-color: #28a745; /* Green for export */
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+        }
+        .export-btn:hover {
+            background-color: #218838;
+        }
+
+        /* Reports List Container */
+        #reportsList {
+            margin-top: 0; /* Adjusted due to new controls div */
         }
         .no-reports {
             text-align: center;
@@ -93,13 +123,25 @@
             padding: 50px 0;
         }
 
+        /* Responsive Table Container (NEW) */
+        .table-responsive {
+            overflow-x: auto; /* Enables horizontal scrolling on small screens */
+            width: 100%;
+            -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+            border: 1px solid #ddd; /* Outer border */
+            border-radius: 8px; /* Match container border radius */
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05); /* Subtle shadow */
+        }
+
+
         /* Table View Specific Styles (Excel-like) */
         #reportsList table { /* Target the table directly */
             width: 100%;
             border-collapse: collapse; /* Removes space between borders */
             font-size: 0.95em;
             table-layout: fixed; /* Ensures columns respect width */
-            border: 1px solid #ddd; /* Outer border for the table */
+            min-width: 700px; /* Ensure table doesn't get too squished before scroll */
+            border: none; /* Remove outer border as it's on table-responsive */
         }
         #reportsList th,
         #reportsList td {
@@ -124,21 +166,22 @@
         }
 
         /* Column widths for table view - adjusted for new columns */
+        /* Total width should ideally add up to 100% or exceed for min-width to take over */
         #reportsList th:nth-child(1),
-        #reportsList td:nth-child(1) { width: 15%; } /* Date */
+        #reportsList td:nth-child(1) { width: 12%; } /* Date */
         #reportsList th:nth-child(2),
-        #reportsList td:nth-child(2) { width: 30%; } /* Work Done */
+        #reportsList td:nth-child(2) { width: 25%; } /* Work Done */
         #reportsList th:nth-child(3),
         #reportsList td:nth-child(3) { width: 20%; } /* Tomorrow's Work */
         #reportsList th:nth-child(4),
         #reportsList td:nth-child(4) { width: 15%; } /* Material Needs */
         #reportsList th:nth-child(5),
-        #reportsList td:nth-child(5) { width: 12%; } /* Remarks */
+        #reportsList td:nth-child(5) { width: 15%; } /* Remarks */
         #reportsList th:nth-child(6),
-        #reportsList td:nth-child(6) { width: 8%; text-align: center;} /* View Details */
+        #reportsList td:nth-child(6) { width: 13%; text-align: center;} /* View Details */
 
 
-        /* MODIFIED: View Details Button Styling - Now ensures it's blue */
+        /* View Details Button Styling - Now ensures it's blue */
         .view-details-btn {
             background-color: #007bff; /* Blue color */
             color: white;
@@ -235,6 +278,59 @@
         .delete-btn:hover {
             background-color: #c82333;
         }
+
+        /* Basic responsiveness for smaller screens (NEW) */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            .container {
+                padding: 20px 25px;
+                margin: 15px auto;
+            }
+            header h1 {
+                font-size: 1.8em;
+            }
+            header h2 {
+                font-size: 1em;
+            }
+            nav a {
+                margin: 0 8px;
+                padding: 6px 10px;
+                font-size: 0.9em;
+            }
+            .reports-header-controls {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+                margin-bottom: 15px;
+            }
+            .reports-header-controls h2 {
+                font-size: 1.5em;
+            }
+            .export-btn {
+                width: 100%; /* Full width button on mobile */
+                text-align: center;
+                padding: 12px;
+            }
+            #reportsList th,
+            #reportsList td {
+                padding: 8px 5px; /* Less padding in table cells */
+                font-size: 0.8em; /* Smaller font for table content */
+            }
+            .view-details-btn {
+                padding: 6px 8px;
+                font-size: 0.75em;
+            }
+            .modal-content {
+                width: 95%;
+                margin: 20px auto;
+                padding: 20px;
+            }
+            .modal-content p strong {
+                min-width: 120px; /* Adjust label width in modal */
+            }
+        }
     </style>
 </head>
 <body>
@@ -250,10 +346,12 @@
             <a href="view-reports.html" class="active">View All Reports</a>
         </nav>
 
-        <h2 style="text-align: center; margin-top: 30px; color: #34495e;">All Daily Reports</h2>
+        <div class="reports-header-controls">
+            <h2>All Daily Reports</h2>
+            <button id="exportExcelBtn" class="export-btn">Export to Excel</button>
+        </div>
 
-        <div id="reportsList">
-            <p class="no-reports">Loading reports...</p>
+        <div id="reportsList" class="table-responsive"> <p class="no-reports">Loading reports...</p>
         </div>
     </div>
 
@@ -289,7 +387,7 @@
             messagingSenderId: "272780333903",
             appId: "1:272780333903:web:3ce6a684383c43d8f26b3a"
         };
-
+        
         const app = firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore(app);
         // --- End Firebase Config ---
@@ -301,21 +399,32 @@
         const reportsListDiv = document.getElementById('reportsList');
         const reportDetailModal = document.getElementById('reportDetailModal');
         const closeButton = document.querySelector('.close-button');
-        const modalDeleteBtn = document.getElementById('modalDeleteBtn'); // Delete button inside modal
+        const modalDeleteBtn = document.getElementById('modalDeleteBtn');
+        const exportExcelBtn = document.getElementById('exportExcelBtn'); // New: Export button
 
         let currentReportId = null; // To store the ID of the report currently in the modal
 
         // --- Helper Functions ---
-        const formatDate = (timestamp) => {
+        // Modified: formatDate now accepts a 'type' to return date only or full datetime
+        const formatDate = (timestamp, type = 'full') => {
             if (!timestamp) return 'N/A';
             const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-            return date.toLocaleString('en-IN', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
+
+            if (type === 'date_only') {
+                return date.toLocaleDateString('en-IN', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit'
+                }); // e.g., 23/05/2025
+            } else { // full datetime
+                return date.toLocaleString('en-IN', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            }
         };
 
         const truncateText = (text, maxLength) => {
@@ -359,7 +468,8 @@
                         const report = doc.data();
                         const reportId = doc.id;
 
-                        const formattedDate = `${report.reportDate.toDate().getDate()}/${report.reportDate.toDate().getMonth() + 1}/${report.reportDate.toDate().getFullYear()}`;
+                        // Use 'date_only' format for the table column
+                        const formattedDateForTable = formatDate(report.reportDate, 'date_only');
                         const workDoneShort = truncateText(report.workDone, 50);
                         const tomorrowPlanningShort = truncateText(report.tomorrowPlanning, 40);
                         const materialNeedsShort = truncateText(report.materialNeeds, 30);
@@ -368,7 +478,7 @@
 
                         tableHtml += `
                             <tr>
-                                <td><span title="${report.reportDate.toDate().toLocaleString()}">${formattedDate}</span></td>
+                                <td><span title="${report.reportDate.toDate().toLocaleString()}">${formattedDateForTable}</span></td>
                                 <td><span title="${report.workDone}">${workDoneShort}</span></td>
                                 <td><span title="${report.tomorrowPlanning}">${tomorrowPlanningShort}</span></td>
                                 <td><span title="${report.materialNeeds}">${materialNeedsShort}</span></td>
@@ -410,8 +520,8 @@
                     if (doc.exists) {
                         const report = doc.data();
 
-                        // Populate modal fields
-                        document.getElementById('modalReportDate').textContent = `Report on ${formatDate(report.reportDate)}`;
+                        // Use 'full' format for modal date
+                        document.getElementById('modalReportDate').textContent = `Report on ${formatDate(report.reportDate, 'full')}`;
                         document.getElementById('modalWorkDone').textContent = report.workDone; // Full text
                         document.getElementById('modalImageLink').innerHTML = report.imageLinks && report.imageLinks.length > 0 ? `<a href="${report.imageLinks[0]}" target="_blank">${report.imageLinks[0]}</a>` : 'N/A';
                         document.getElementById('modalTomorrowPlanning').textContent = report.tomorrowPlanning;
@@ -421,7 +531,7 @@
                         document.getElementById('modalCheckingCallNotes').textContent = report.checkingCallNotes;
 
                         document.getElementById('modalCheckedBy').textContent = report.checkedByName || 'Not Checked';
-                        document.getElementById('modalCheckedDate').textContent = report.checkedByDate ? formatDate(report.checkedByDate) : 'N/A';
+                        document.getElementById('modalCheckedDate').textContent = report.checkedByDate ? formatDate(report.checkedByDate, 'full') : 'N/A';
 
                         reportDetailModal.style.display = 'block'; // Show the modal
                     } else {
@@ -459,6 +569,65 @@
             }
         };
 
+        // Function to export data to Excel (NEW)
+        const exportReportsToExcel = () => {
+            db.collection('dailyReports').orderBy('reportDate', 'desc').get()
+                .then((querySnapshot) => {
+                    if (querySnapshot.empty) {
+                        alert("No reports to export.");
+                        return;
+                    }
+
+                    const data = [];
+                    // Add header row for Excel
+                    data.push([
+                        "Date",
+                        "Work Done",
+                        "Tomorrow's Planning",
+                        "Material Needs",
+                        "Issues on Site",
+                        "Remarks",
+                        "Checking Call Notes",
+                        "Image Link", // Include image link
+                        "Report Checked By", // Include checked by fields
+                        "Checked Date",
+                        "Submitted At" // Original submission timestamp
+                    ]);
+
+                    querySnapshot.forEach((doc) => {
+                        const report = doc.data();
+                        data.push([
+                            formatDate(report.reportDate, 'full'), // Full date time in Excel for precision
+                            report.workDone,
+                            report.tomorrowPlanning,
+                            report.materialNeeds,
+                            report.issuesOnSite,
+                            report.remarks,
+                            report.checkingCallNotes,
+                            report.imageLinks && report.imageLinks.length > 0 ? report.imageLinks[0] : '',
+                            report.checkedByName || 'N/A',
+                            report.checkedByDate ? formatDate(report.checkedByDate, 'full') : 'N/A',
+                            report.submittedAt ? formatDate(report.submittedAt, 'full') : 'N/A'
+                        ]);
+                    });
+
+                    // Create a workbook and add the worksheet
+                    const ws = XLSX.utils.aoa_to_sheet(data);
+                    const wb = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(wb, ws, "Daily Reports");
+
+                    // Save the workbook to a file
+                    XLSX.writeFile(wb, "Daily_Reports.xlsx");
+                    alert("Reports exported to Excel successfully!");
+
+                })
+                .catch((error) => {
+                    console.error("Error exporting documents: ", error);
+                    alert("Error exporting reports to Excel. Please check console.");
+                });
+        };
+
+
         // --- Event Listeners ---
         // Close modal functionality
         closeButton.addEventListener('click', () => {
@@ -475,6 +644,10 @@
 
         // Attach delete event listener to the button INSIDE the modal
         modalDeleteBtn.addEventListener('click', handleDeleteReport);
+
+        // Attach event listener for the new Export button
+        exportExcelBtn.addEventListener('click', exportReportsToExcel);
+
 
         // --- Initial Load ---
         document.addEventListener('DOMContentLoaded', () => {
