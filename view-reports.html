@@ -5,9 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>All Daily Reports - Hariom Construction Pvt. Ltd.</title>
 
+    <!-- Firebase SDK Imports (App, Firestore, Auth) -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script> 
 
+    <!-- SheetJS (XLSX) Library for Excel Export -->
     <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
 
     <style>
@@ -39,16 +42,16 @@
             border-bottom: 2px solid #e0e0e0;
         }
         header img {
-            max-height: 100px; /* Larger logo */
+            max-height: 100px;
             margin-bottom: 15px;
-            display: block; /* Center the image */
+            display: block;
             margin-left: auto;
             margin-right: auto;
         }
         header h1 {
             margin: 8px 0 2px;
             color: #2c3e50;
-            font-size: 1.8em; /* Smaller company name */
+            font-size: 1.8em;
             font-weight: 600;
         }
         header h2 {
@@ -57,6 +60,32 @@
             font-weight: 600;
             margin-top: 0;
         }
+
+        /* Login/Logout Button in Header (Consistent with index.html) */
+        .header-auth-controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+        .header-auth-controls button {
+            padding: 8px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.3s ease;
+        }
+        .header-auth-controls button:hover {
+            background-color: #0056b3;
+        }
+        .user-info {
+            font-size: 0.9em;
+            color: #555;
+            margin-right: 10px;
+        }
+
 
         /* Navigation Bar Styling - Keep consistent */
         nav {
@@ -81,10 +110,10 @@
         nav a.active {
             background-color: #007bff;
             color: white;
-            pointer-events: none; /* Make active link non-clickable */
+            pointer-events: none;
         }
 
-        /* Page Title and Export Button Area */
+        /* Page Header and Export Button Area */
         .reports-header-controls {
             display: flex;
             justify-content: space-between;
@@ -101,10 +130,10 @@
             background-color: #28a745; /* Green for export */
             color: white;
             border: none;
-            border-radius: 4px;
-            padding: 8px 8px;
+            border-radius: 5px;
+            padding: 10px 20px;
             cursor: pointer;
-            font-size: 0.9em;
+            font-size: 1em;
             font-weight: 600;
             transition: background-color 0.3s ease;
         }
@@ -114,7 +143,7 @@
 
         /* Reports List Container */
         #reportsList {
-            margin-top: 0; /* Adjusted due to new controls div */
+            margin-top: 0;
         }
         .no-reports {
             text-align: center;
@@ -123,35 +152,35 @@
             padding: 50px 0;
         }
 
-        /* Responsive Table Container (NEW) */
+        /* Responsive Table Container */
         .table-responsive {
-            overflow-x: auto; /* Enables horizontal scrolling on small screens */
+            overflow-x: auto;
             width: 100%;
-            -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
-            border: 1px solid #ddd; /* Outer border */
-            border-radius: 8px; /* Match container border radius */
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05); /* Subtle shadow */
+            -webkit-overflow-scrolling: touch;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
 
 
         /* Table View Specific Styles (Excel-like) */
-        #reportsList table { /* Target the table directly */
+        #reportsList table {
             width: 100%;
-            border-collapse: collapse; /* Removes space between borders */
+            border-collapse: collapse;
             font-size: 0.95em;
-            table-layout: fixed; /* Ensures columns respect width */
-            min-width: 700px; /* Ensure table doesn't get too squished before scroll */
-            border: none; /* Remove outer border as it's on table-responsive */
+            table-layout: fixed;
+            min-width: 900px; /* Ensures horizontal scroll on smaller screens */
+            border: none;
         }
         #reportsList th,
         #reportsList td {
-            border: 1px solid #ddd; /* Borders for cells */
+            border: 1px solid #ddd;
             padding: 10px 8px;
             text-align: left;
             vertical-align: top;
-            white-space: nowrap; /* Prevent text wrapping unless explicitly allowed */
+            white-space: nowrap;
             overflow: hidden;
-            text-overflow: ellipsis; /* Add ellipsis for overflow */
+            text-overflow: ellipsis;
         }
         #reportsList th {
             background-color: #e9ecef;
@@ -159,69 +188,113 @@
             color: #333;
         }
         #reportsList tr:nth-child(even) {
-            background-color: #f6f6f6; /* Zebra striping */
+            background-color: #f6f6f6;
         }
         #reportsList tr:hover {
-            background-color: #eef2f6; /* Subtle hover effect */
+            background-color: #eef2f6;
         }
 
         /* Column widths for table view - adjusted for new columns */
-        /* Total width should ideally add up to 100% or exceed for min-width to take over */
         #reportsList th:nth-child(1),
-        #reportsList td:nth-child(1) { width: 12%; } /* Date */
+        #reportsList td:nth-child(1) { width: 10%; } /* Date */
         #reportsList th:nth-child(2),
-        #reportsList td:nth-child(2) { width: 25%; } /* Work Done */
+        #reportsList td:nth-child(2) { width: 20%; } /* Work Done */
         #reportsList th:nth-child(3),
-        #reportsList td:nth-child(3) { width: 20%; } /* Tomorrow's Work */
+        #reportsList td:nth-child(3) { width: 15%; } /* Tomorrow's Work */
         #reportsList th:nth-child(4),
-        #reportsList td:nth-child(4) { width: 15%; } /* Material Needs */
+        #reportsList td:nth-child(4) { width: 12%; } /* Material Needs */
         #reportsList th:nth-child(5),
-        #reportsList td:nth-child(5) { width: 15%; } /* Remarks */
+        #reportsList td:nth-child(5) { width: 12%; } /* Remarks */
         #reportsList th:nth-child(6),
-        #reportsList td:nth-child(6) { width: 13%; text-align: center;} /* View Details */
+        #reportsList td:nth-child(6) { width: 8%; text-align: center;} /* Photo Preview */
+        #reportsList th:nth-child(7),
+        #reportsList td:nth-child(7) { width: 8%; text-align: center;} /* Checked Status */
+        #reportsList th:nth-child(8),
+        #reportsList td:nth-child(8) { width: 15%; text-align: center;} /* View Details */
 
 
-        /* View Details Button Styling - Now ensures it's blue */
+        /* Table Thumbnail Styling */
+        .table-thumbnail {
+            max-width: 50px;
+            max-height: 50px;
+            object-fit: cover;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            display: block;
+            margin: 0 auto;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        .table-thumbnail:hover {
+            transform: scale(1.1);
+        }
+        .table-thumbnail-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            padding: 5px 0;
+        }
+        .no-photo-text {
+            font-size: 0.75em;
+            color: #888;
+            font-style: italic;
+            white-space: normal;
+        }
+
+        /* Checked Status Styling */
+        .status-checked {
+            color: #28a745; /* Green color for checked */
+            font-weight: bold;
+        }
+        .status-pending {
+            color: #6c757d; /* Gray color for pending */
+            font-weight: normal;
+        }
+
+
+        /* View Details Button Styling */
         .view-details-btn {
-            background-color: #007bff; /* Blue color */
+            background-color: #007bff;
             color: white;
             border: none;
             border-radius: 5px;
-            padding: 8px 12px; /* Slightly smaller for table cell */
+            padding: 8px 12px;
             cursor: pointer;
-            font-size: 0.85em; /* Slightly smaller font */
+            font-size: 0.85em;
             transition: background-color 0.3s ease;
-            white-space: nowrap; /* Keep button text on one line */
+            white-space: nowrap;
         }
         .view-details-btn:hover {
-            background-color: #0056b3; /* Darker blue on hover */
+            background-color: #0056b3;
         }
 
 
         /* Modal for Detailed Report View */
         .modal {
-            display: none; /* Hidden by default */
-            position: fixed; /* Stay in place */
-            z-index: 1000; /* Sit on top of everything */
+            display: none;
+            position: fixed;
+            z-index: 1000;
             left: 0;
             top: 0;
-            width: 100%; /* Full width */
-            height: 100%; /* Full height */
-            overflow: auto; /* Enable scroll if needed */
-            background-color: rgba(0,0,0,0.5); /* Black w/ opacity */
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
             padding-top: 60px;
         }
 
         .modal-content {
             background-color: #fefefe;
-            margin: 5% auto; /* 5% from the top and centered */
+            margin: 5% auto;
             padding: 30px;
             border: 1px solid #888;
             border-radius: 10px;
-            width: 80%; /* Could be more responsive */
+            width: 80%;
             max-width: 700px;
             position: relative;
             box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            text-align: left; /* Ensure text aligns left in detail modal */
         }
 
         .close-button {
@@ -249,22 +322,66 @@
         .modal-content p {
             margin-bottom: 10px;
             font-size: 1.05em;
-            color: #333; /* Ensure normal black color */
+            color: #333;
         }
         .modal-content p strong {
             color: #34495e;
             display: inline-block;
-            min-width: 180px; /* Align labels in modal */
+            min-width: 180px;
             font-weight: 600;
         }
 
-        .modal-actions { /* Styling for buttons inside modal */
+        /* Image preview styling in modal */
+        .modal-image-previews {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 5px;
+            border: 1px dashed #eee;
+            border-radius: 5px;
+            justify-content: center;
+        }
+        .modal-image-previews img {
+            max-width: 150px;
+            height: auto;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        .modal-image-previews img:hover {
+            transform: scale(1.03);
+        }
+        .modal-image-previews .image-link-fallback {
+            word-break: break-all;
+            font-size: 0.9em;
+            color: #dc3545;
+            text-align: center;
+            flex-basis: 100%;
+        }
+        .no-photos-message {
+            text-align: center;
+            color: #6c757d;
+            font-style: italic;
+            padding: 10px;
+            width: 100%;
+        }
+
+
+        .modal-actions {
             text-align: right;
             margin-top: 25px;
             padding-top: 15px;
             border-top: 1px dashed #e0e0e0;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
         }
-        .delete-btn { /* Delete button styling */
+        .delete-btn, .check-report-btn {
             background-color: #dc3545;
             color: white;
             border: none;
@@ -273,13 +390,61 @@
             cursor: pointer;
             font-size: 0.9em;
             transition: background-color 0.3s ease;
-            margin-left: 10px;
         }
         .delete-btn:hover {
             background-color: #c82333;
         }
+        .check-report-btn {
+            background-color: #28a745;
+        }
+        .check-report-btn:hover {
+            background-color: #218838;
+        }
 
-        /* Basic responsiveness for smaller screens (NEW) */
+        /* Login Modal Styles (Consistent with index.html modal styling) */
+        .login-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+            padding-top: 60px;
+        }
+
+        .login-modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 30px;
+            border: 1px solid #888;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 400px;
+            position: relative;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            text-align: left;
+        }
+        .login-modal-content h3 {
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: #2c3e50;
+            font-size: 1.6em;
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        .login-error {
+            color: #dc3545;
+            font-size: 0.9em;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+
+        /* Responsive adjustments for mobile */
         @media (max-width: 768px) {
             body {
                 padding: 10px;
@@ -309,14 +474,18 @@
                 font-size: 1.5em;
             }
             .export-btn {
-                width: 100%; /* Full width button on mobile */
+                width: 100%;
                 text-align: center;
                 padding: 12px;
             }
+            /* Min-width helps enforce horizontal scroll on small devices */
+            #reportsList table {
+                min-width: 600px;
+            }
             #reportsList th,
             #reportsList td {
-                padding: 8px 5px; /* Less padding in table cells */
-                font-size: 0.8em; /* Smaller font for table content */
+                padding: 8px 5px;
+                font-size: 0.8em;
             }
             .view-details-btn {
                 padding: 6px 8px;
@@ -328,7 +497,16 @@
                 padding: 20px;
             }
             .modal-content p strong {
-                min-width: 120px; /* Adjust label width in modal */
+                min-width: 120px;
+            }
+            .modal-image-previews img {
+                max-width: 100px;
+            }
+            .header-auth-controls {
+                position: static;
+                text-align: center;
+                margin-top: 10px;
+                margin-bottom: 10px;
             }
         }
     </style>
@@ -338,41 +516,81 @@
         <header>
             <img src="logo.png" alt="Company Logo" id="company-logo">
             <h1 id="company-name">Hariom Construction Pvt. Ltd.</h1>
-            <h2 id="project-name">Shiv Farm Residencial Bunglows </h2>
+            <h2 id="project-name">Shiv Farm Residencial Bunglows</h2>
+
+            <!-- Login/Logout Button & User Info -->
+            <div class="header-auth-controls">
+                <span id="userStatus" class="user-info">Not logged in</span>
+                <button id="authButton">Login</button>
+            </div>
         </header>
 
+        <!-- Navigation Bar -->
         <nav>
             <a href="index.html">Submit Daily Report</a>
             <a href="view-reports.html" class="active">View All Reports</a>
         </nav>
 
+        <!-- Page Header and Export Button -->
         <div class="reports-header-controls">
             <h2>All Daily Reports</h2>
             <button id="exportExcelBtn" class="export-btn">Export to Excel</button>
         </div>
 
-        <div id="reportsList" class="table-responsive"> <p class="no-reports">Loading reports...</p>
+        <!-- Reports will be loaded here -->
+        <div id="reportsList" class="table-responsive">
+            <p class="no-reports">Loading reports...</p>
         </div>
     </div>
 
+    <!-- The Modal for Detailed Report View -->
     <div id="reportDetailModal" class="modal">
         <div class="modal-content">
-            <span class="close-button">&times;</span>
+            <span class="close-button" id="reportModalClose">&times;</span>
             <h3 id="modalReportDate"></h3>
             <p><strong>Work Done:</strong> <span id="modalWorkDone"></span></p>
-            <p><strong>Image Link:</strong> <span id="modalImageLink"></span></p>
+            <p><strong>Photos:</strong></p>
+            <div id="modalImageLinkContainer" class="modal-image-previews">
+                <p class="no-photos-message">No photos uploaded.</p>
+            </div>
+            <hr>
             <p><strong>Tomorrow's Planning:</strong> <span id="modalTomorrowPlanning"></span></p>
             <p><strong>Material Needs:</strong> <span id="modalMaterialNeeds"></span></p>
             <p><strong>Issues on Site:</strong> <span id="modalIssuesOnSite"></span></p>
             <p><strong>Remarks:</strong> <span id="modalRemarks"></span></p>
             <p><strong>Checking Call Notes:</strong> <span id="modalCheckingCallNotes"></span></p>
             <hr>
+            <!-- Manager Check section -->
             <p><strong>Report Checked By:</strong> <span id="modalCheckedBy">Not Checked</span></p>
             <p><strong>Checked Date:</strong> <span id="modalCheckedDate">N/A</span></p>
 
             <div class="modal-actions">
+                <!-- Mark as Checked button (conditionally visible) -->
+                <button class="check-report-btn" id="markCheckedBtn" style="display: none;">Mark as Checked</button>
                 <button class="delete-btn" id="modalDeleteBtn">Delete Report</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Login Modal HTML (Separate for this file to ensure it's always available) -->
+    <div id="loginModal" class="login-modal">
+        <div class="login-modal-content">
+            <span class="close-button" id="loginModalClose">&times;</span>
+            <h3>Admin Login</h3>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="loginEmail">Email:</label>
+                    <input type="email" id="loginEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password:</label>
+                    <input type="password" id="loginPassword" required>
+                </div>
+                <div class="buttons" style="text-align: center;">
+                    <button type="submit">Login</button>
+                </div>
+                <p id="loginError" class="login-error"></p>
+            </form>
         </div>
     </div>
 
@@ -387,25 +605,39 @@
             messagingSenderId: "272780333903",
             appId: "1:272780333903:web:3ce6a684383c43d8f26b3a"
         };
-        
+
         const app = firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore(app);
-        // --- End Firebase Config ---
+        const auth = firebase.auth(app);
 
         // --- Constants ---
         const DELETE_PASSWORD = "0000"; // EXTREMELY INSECURE FOR PRODUCTION!
 
+        // --- Global State ---
+        let currentUser = null; // Stores current logged-in user object
+
         // --- DOM Elements ---
         const reportsListDiv = document.getElementById('reportsList');
         const reportDetailModal = document.getElementById('reportDetailModal');
-        const closeButton = document.querySelector('.close-button');
+        const closeReportModalBtn = document.getElementById('reportModalClose'); // Corrected ID
         const modalDeleteBtn = document.getElementById('modalDeleteBtn');
-        const exportExcelBtn = document.getElementById('exportExcelBtn'); // New: Export button
+        const exportExcelBtn = document.getElementById('exportExcelBtn');
+        const markCheckedBtn = document.getElementById('markCheckedBtn');
 
-        let currentReportId = null; // To store the ID of the report currently in the modal
+        const modalImageLinkContainer = document.getElementById('modalImageLinkContainer');
+        const noPhotosMessageElement = reportDetailModal.querySelector('.no-photos-message');
+
+        const authButton = document.getElementById('authButton');
+        const userStatusSpan = document.getElementById('userStatus');
+        const loginModal = document.getElementById('loginModal');
+        const loginModalCloseBtn = document.getElementById('loginModalClose');
+        const loginForm = document.getElementById('loginForm');
+        const loginEmailInput = document.getElementById('loginEmail');
+        const loginPasswordInput = document.getElementById('loginPassword');
+        const loginErrorDiv = document.getElementById('loginError');
+
 
         // --- Helper Functions ---
-        // Modified: formatDate now accepts a 'type' to return date only or full datetime
         const formatDate = (timestamp, type = 'full') => {
             if (!timestamp) return 'N/A';
             const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
@@ -415,8 +647,8 @@
                     year: 'numeric',
                     month: '2-digit',
                     day: '2-digit'
-                }); // e.g., 23/05/2025
-            } else { // full datetime
+                });
+            } else {
                 return date.toLocaleString('en-IN', {
                     year: 'numeric',
                     month: 'long',
@@ -435,6 +667,69 @@
             return text;
         };
 
+        // --- Authentication Logic ---
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                currentUser = user;
+                userStatusSpan.textContent = `Logged in as: ${user.email}`;
+                authButton.textContent = 'Logout';
+                authButton.onclick = handleLogout;
+            } else {
+                currentUser = null;
+                userStatusSpan.textContent = 'Not logged in';
+                authButton.textContent = 'Login';
+                authButton.onclick = () => loginModal.style.display = 'block';
+            }
+            // Always re-fetch reports to update UI based on login status
+            fetchAndDisplayReports();
+        });
+
+        // Handle Login
+        loginForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            loginErrorDiv.textContent = '';
+
+            const email = loginEmailInput.value;
+            const password = loginPasswordInput.value;
+
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+                loginModal.style.display = 'none';
+                loginForm.reset();
+                // onAuthStateChanged will handle UI update and report refresh
+            } catch (error) {
+                console.error("Login error:", error);
+                loginErrorDiv.textContent = `Login failed: ${error.message}`;
+            }
+        });
+
+        // Handle Logout
+        async function handleLogout() {
+            try {
+                await auth.signOut();
+                alert('Logged out successfully!');
+                // onAuthStateChanged will handle UI update and report refresh
+            } catch (error) {
+                console.error("Logout error:", error);
+                alert('Logout failed: ' + error.message);
+            }
+        }
+
+        // Close Login Modal
+        loginModalCloseBtn.addEventListener('click', () => {
+            loginModal.style.display = 'none';
+            loginErrorDiv.textContent = '';
+            loginForm.reset();
+        });
+
+        window.addEventListener('click', (event) => {
+            if (event.target == loginModal) {
+                loginModal.style.display = 'none';
+                loginErrorDiv.textContent = '';
+                loginForm.reset();
+            }
+        });
+
         // --- Main Functions ---
 
         // Function to fetch and display reports in Table View
@@ -448,7 +743,6 @@
                         return;
                     }
 
-                    // Start building the table HTML
                     let tableHtml = `
                         <table>
                             <thead>
@@ -458,6 +752,8 @@
                                     <th>Tomorrow's Work</th>
                                     <th>Material Needs</th>
                                     <th>Remarks</th>
+                                    <th>Photo</th>
+                                    <th>Checked Status</th>
                                     <th>View Details</th>
                                 </tr>
                             </thead>
@@ -468,13 +764,19 @@
                         const report = doc.data();
                         const reportId = doc.id;
 
-                        // Use 'date_only' format for the table column
                         const formattedDateForTable = formatDate(report.reportDate, 'date_only');
                         const workDoneShort = truncateText(report.workDone, 50);
                         const tomorrowPlanningShort = truncateText(report.tomorrowPlanning, 40);
                         const materialNeedsShort = truncateText(report.materialNeeds, 30);
                         const remarksShort = truncateText(report.remarks, 30);
 
+                        const firstImageLink = (report.imageLinks && report.imageLinks.length > 0) ? report.imageLinks[0] : '';
+                        const photoThumbnailHtml = firstImageLink ?
+                            `<div class="table-thumbnail-container"><a href="${firstImageLink}" target="_blank" title="Click to view full image"><img src="${firstImageLink}" alt="Report Photo" class="table-thumbnail" onerror="this.onerror=null;this.src='https://placehold.co/50x50/e0e0e0/555?text=No+Img';this.title='Image failed to load';"></a></div>` :
+                            `<div class="table-thumbnail-container"><span class="no-photo-text">No Photo</span></div>`;
+
+                        const checkedStatusText = report.checkedByName ? 'Checked' : 'Pending Review';
+                        const checkedStatusClass = report.checkedByName ? 'status-checked' : 'status-pending';
 
                         tableHtml += `
                             <tr>
@@ -483,6 +785,8 @@
                                 <td><span title="${report.tomorrowPlanning}">${tomorrowPlanningShort}</span></td>
                                 <td><span title="${report.materialNeeds}">${materialNeedsShort}</span></td>
                                 <td><span title="${report.remarks}">${remarksShort}</span></td>
+                                <td style="text-align: center;">${photoThumbnailHtml}</td>
+                                <td style="text-align: center;"><span class="${checkedStatusClass}">${checkedStatusText}</span></td>
                                 <td style="text-align: center;">
                                     <button class="view-details-btn" data-id="${reportId}">View</button>
                                 </td>
@@ -495,9 +799,8 @@
                         </table>
                     `;
 
-                    reportsListDiv.innerHTML = tableHtml; // Inject the table HTML
+                    reportsListDiv.innerHTML = tableHtml;
 
-                    // Attach event listeners for "View Details" buttons
                     document.querySelectorAll('.view-details-btn').forEach(button => {
                         button.addEventListener('click', (e) => {
                             const id = e.target.dataset.id;
@@ -513,27 +816,56 @@
 
         // Function to display full report details in a modal
         const displayReportDetails = (id) => {
-            currentReportId = id; // Store the ID for deletion
+            currentReportId = id;
 
             db.collection('dailyReports').doc(id).get()
                 .then((doc) => {
                     if (doc.exists) {
                         const report = doc.data();
 
-                        // Use 'full' format for modal date
                         document.getElementById('modalReportDate').textContent = `Report on ${formatDate(report.reportDate, 'full')}`;
-                        document.getElementById('modalWorkDone').textContent = report.workDone; // Full text
-                        document.getElementById('modalImageLink').innerHTML = report.imageLinks && report.imageLinks.length > 0 ? `<a href="${report.imageLinks[0]}" target="_blank">${report.imageLinks[0]}</a>` : 'N/A';
+                        document.getElementById('modalWorkDone').textContent = report.workDone;
                         document.getElementById('modalTomorrowPlanning').textContent = report.tomorrowPlanning;
                         document.getElementById('modalMaterialNeeds').textContent = report.materialNeeds;
                         document.getElementById('modalIssuesOnSite').textContent = report.issuesOnSite;
                         document.getElementById('modalRemarks').textContent = report.remarks;
                         document.getElementById('modalCheckingCallNotes').textContent = report.checkingCallNotes;
 
+                        modalImageLinkContainer.innerHTML = '';
+                        if (report.imageLinks && report.imageLinks.length > 0) {
+                            noPhotosMessageElement.style.display = 'none';
+                            report.imageLinks.forEach(imageUrl => {
+                                const imageAnchor = document.createElement('a');
+                                imageAnchor.href = imageUrl;
+                                imageAnchor.target = "_blank";
+
+                                const img = document.createElement('img');
+                                img.src = imageUrl;
+                                img.alt = 'Report Image';
+                                img.onerror = () => {
+                                    imageAnchor.textContent = "Image failed to load (Click to open link)";
+                                    imageAnchor.classList.add('image-link-fallback');
+                                    img.remove();
+                                };
+                                imageAnchor.appendChild(img);
+                                modalImageLinkContainer.appendChild(imageAnchor);
+                            });
+                        } else {
+                            noPhotosMessageElement.style.display = 'block';
+                        }
+
                         document.getElementById('modalCheckedBy').textContent = report.checkedByName || 'Not Checked';
                         document.getElementById('modalCheckedDate').textContent = report.checkedByDate ? formatDate(report.checkedByDate, 'full') : 'N/A';
 
-                        reportDetailModal.style.display = 'block'; // Show the modal
+                        // Conditionally show "Mark as Checked" button
+                        if (currentUser && !report.checkedByName) { // Show if logged in and not yet checked
+                            markCheckedBtn.style.display = 'inline-block';
+                            markCheckedBtn.dataset.reportId = id; // Set report ID
+                        } else {
+                            markCheckedBtn.style.display = 'none'; // Hide if not logged in or already checked
+                        }
+
+                        reportDetailModal.style.display = 'block';
                     } else {
                         console.log("No such document!");
                         alert("Report not found.");
@@ -545,9 +877,45 @@
                 });
         };
 
+        // Function to handle marking a report as checked
+        markCheckedBtn.addEventListener('click', async () => {
+            if (!currentUser) {
+                alert('You must be logged in to mark reports as checked.');
+                return;
+            }
+
+            const reportId = markCheckedBtn.dataset.reportId;
+            if (!reportId) {
+                alert('Error: No report selected to mark as checked.');
+                return;
+            }
+
+            if (confirm(`Mark this report as checked by ${currentUser.email}?`)) {
+                try {
+                    await db.collection('dailyReports').doc(reportId).update({
+                        checkedByName: currentUser.email,
+                        checkedByDate: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    alert('Report marked as checked successfully!');
+                    reportDetailModal.style.display = 'none';
+                    fetchAndDisplayReports(); // Refresh table to show updated status
+                } catch (error) {
+                    console.error("Error marking report as checked:", error);
+                    alert('Error marking report as checked. Please check your network and permissions.');
+                }
+            }
+        });
+
+
         // Function to handle report deletion (called from modal)
         const handleDeleteReport = () => {
-            if (!currentReportId) return; // Should not happen if called from modal
+            if (!currentReportId) return;
+
+            // Only allow delete if user is logged in
+            if (!currentUser) {
+                alert('You must be logged in to delete reports.');
+                return;
+            }
 
             const password = prompt("Enter password to delete this report:");
 
@@ -556,20 +924,20 @@
                     db.collection('dailyReports').doc(currentReportId).delete()
                         .then(() => {
                             alert("Report successfully deleted!");
-                            reportDetailModal.style.display = 'none'; // Close modal after deletion
-                            fetchAndDisplayReports(); // Re-fetch and display reports
+                            reportDetailModal.style.display = 'none';
+                            fetchAndDisplayReports();
                         })
                         .catch((error) => {
                             console.error("Error removing document: ", error);
                             alert("Error deleting report. Please check console for details.");
                         });
                 }
-            } else if (password !== null) { // If user didn't click cancel but entered wrong password
+            } else if (password !== null) {
                 alert("Incorrect password. Report not deleted.");
             }
         };
 
-        // Function to export data to Excel (NEW)
+        // Function to export data to Excel
         const exportReportsToExcel = () => {
             db.collection('dailyReports').orderBy('reportDate', 'desc').get()
                 .then((querySnapshot) => {
@@ -579,7 +947,6 @@
                     }
 
                     const data = [];
-                    // Add header row for Excel
                     data.push([
                         "Date",
                         "Work Done",
@@ -588,35 +955,33 @@
                         "Issues on Site",
                         "Remarks",
                         "Checking Call Notes",
-                        "Image Link", // Include image link
-                        "Report Checked By", // Include checked by fields
+                        "Image Links",
+                        "Report Checked By",
                         "Checked Date",
-                        "Submitted At" // Original submission timestamp
+                        "Submitted At"
                     ]);
 
                     querySnapshot.forEach((doc) => {
                         const report = doc.data();
                         data.push([
-                            formatDate(report.reportDate, 'full'), // Full date time in Excel for precision
+                            formatDate(report.reportDate, 'full'),
                             report.workDone,
                             report.tomorrowPlanning,
                             report.materialNeeds,
                             report.issuesOnSite,
                             report.remarks,
                             report.checkingCallNotes,
-                            report.imageLinks && report.imageLinks.length > 0 ? report.imageLinks[0] : '',
+                            report.imageLinks && report.imageLinks.length > 0 ? report.imageLinks.join('\n') : '',
                             report.checkedByName || 'N/A',
                             report.checkedByDate ? formatDate(report.checkedByDate, 'full') : 'N/A',
                             report.submittedAt ? formatDate(report.submittedAt, 'full') : 'N/A'
                         ]);
                     });
 
-                    // Create a workbook and add the worksheet
                     const ws = XLSX.utils.aoa_to_sheet(data);
                     const wb = XLSX.utils.book_new();
                     XLSX.utils.book_append_sheet(wb, ws, "Daily Reports");
 
-                    // Save the workbook to a file
                     XLSX.writeFile(wb, "Daily_Reports.xlsx");
                     alert("Reports exported to Excel successfully!");
 
@@ -629,29 +994,24 @@
 
 
         // --- Event Listeners ---
-        // Close modal functionality
-        closeButton.addEventListener('click', () => {
+        closeReportModalBtn.addEventListener('click', () => {
             reportDetailModal.style.display = 'none';
-            currentReportId = null; // Clear stored ID
+            currentReportId = null;
         });
 
         window.addEventListener('click', (event) => {
             if (event.target == reportDetailModal) {
                 reportDetailModal.style.display = 'none';
-                currentReportId = null; // Clear stored ID
+                currentReportId = null;
             }
         });
 
-        // Attach delete event listener to the button INSIDE the modal
         modalDeleteBtn.addEventListener('click', handleDeleteReport);
-
-        // Attach event listener for the new Export button
         exportExcelBtn.addEventListener('click', exportReportsToExcel);
 
 
         // --- Initial Load ---
         document.addEventListener('DOMContentLoaded', () => {
-            // Set active class on current page's nav link
             const currentPath = window.location.pathname.split("/").pop();
             const navLinks = document.querySelectorAll('nav a');
             navLinks.forEach(link => {
@@ -662,8 +1022,8 @@
                 }
             });
 
-            // Initial fetch of reports when the page loads (now always table view)
-            fetchAndDisplayReports();
+            // Initial fetch of reports happens via onAuthStateChanged now,
+            // ensuring it's called after Firebase Auth is ready.
         });
     </script>
 </body>

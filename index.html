@@ -5,8 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daily Site Report - Hariom Construction Pvt. Ltd.</title>
 
+    <!-- Firebase SDK Imports -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script> <!-- NEW: Firebase Auth SDK -->
 
     <style>
         /* General Body Styling */
@@ -14,39 +16,40 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 20px;
-            background-color: #eef2f6; /* Light background for the page */
+            background-color: #eef2f6;
             color: #333;
             line-height: 1.6;
         }
 
         /* Container for the Report */
         .container {
-            max-width: 900px; /* Slightly wider for a document feel */
+            max-width: 900px;
             margin: 30px auto;
             background-color: #ffffff;
-            padding: 40px 50px; /* More padding for spaciousness */
+            padding: 40px 50px;
             border-radius: 10px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08); /* Softer shadow */
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
         }
 
         /* Header Section */
         header {
             text-align: center;
-            margin-bottom: 20px; /* Reduced margin to make space for nav */
+            margin-bottom: 20px;
             padding-bottom: 25px;
-            border-bottom: 2px solid #e0e0e0; /* A cleaner divider */
+            border-bottom: 2px solid #e0e0e0;
+            position: relative; /* For login button positioning */
         }
         header img {
-            max-height: 100px; /* Larger logo */
+            max-height: 100px;
             margin-bottom: 15px;
-            display: block; /* Center the image */
+            display: block;
             margin-left: auto;
             margin-right: auto;
         }
         header h1 {
             margin: 8px 0 2px;
             color: #2c3e50;
-            font-size: 1.8em; /* Smaller company name */
+            font-size: 1.8em;
             font-weight: 600;
         }
         header h2 {
@@ -56,7 +59,33 @@
             margin-top: 0;
         }
 
-        /* Navigation Bar Styling (NEW) */
+        /* NEW: Login/Logout Button in Header */
+        .header-auth-controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+        .header-auth-controls button {
+            padding: 8px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.3s ease;
+        }
+        .header-auth-controls button:hover {
+            background-color: #0056b3;
+        }
+        .user-info {
+            font-size: 0.9em;
+            color: #555;
+            margin-right: 10px;
+        }
+
+
+        /* Navigation Bar Styling */
         nav {
             text-align: center;
             margin-bottom: 30px;
@@ -65,7 +94,7 @@
         }
         nav a {
             text-decoration: none;
-            color: #007bff; /* Primary link color */
+            color: #007bff;
             font-weight: 600;
             margin: 0 15px;
             padding: 8px 15px;
@@ -79,59 +108,68 @@
         nav a.active {
             background-color: #007bff;
             color: white;
-            pointer-events: none; /* Make active link non-clickable */
+            pointer-events: none;
         }
 
 
-        /* Form Group Styling - Making it less "form-like" */
+        /* Form Group Styling */
         .form-group {
-            margin-bottom: 25px; /* More space between sections */
-            padding: 15px 0; /* Internal padding for each section */
-            border-bottom: 1px dashed #e0e0e0; /* Subtle separator */
+            margin-bottom: 25px;
+            padding: 15px 0;
+            border-bottom: 1px dashed #e0e0e0;
         }
         .form-group:last-of-type {
-            border-bottom: none; /* No border for the last one */
+            border-bottom: none;
             margin-bottom: 0;
         }
 
         label {
             display: block;
             margin-bottom: 8px;
-            font-weight: 700; /* Bolder labels */
+            font-weight: 700;
             color: #34495e;
             font-size: 1.1em;
         }
 
         input[type="text"],
-        input[type="url"],
         input[type="datetime-local"],
-        textarea {
-            width: calc(100% - 24px); /* Account for padding and border */
+        textarea,
+        input[type="file"],
+        input[type="email"], /* NEW */
+        input[type="password"] /* NEW */ {
+            width: calc(100% - 24px);
             padding: 12px;
-            border: 1px solid #c0c0c0; /* Softer border */
-            border-radius: 6px; /* Slightly more rounded */
+            border: 1px solid #c0c0c0;
+            border-radius: 6px;
             box-sizing: border-box;
             font-size: 1em;
-            transition: border-color 0.3s ease, box-shadow 0.3s ease; /* Smooth transitions */
-            background-color: #fcfcfc; /* Light input background */
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            background-color: #fcfcfc;
         }
 
         input[type="text"]:focus,
-        input[type="url"]:focus,
         input[type="datetime-local"]:focus,
-        textarea:focus {
-            border-color: #007bff; /* Highlight on focus */
-            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25); /* Subtle glow */
-            outline: none; /* Remove default outline */
+        textarea:focus,
+        input[type="file"]:focus,
+        input[type="email"]:focus,
+        input[type="password"]:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+            outline: none;
+        }
+
+        input[type="file"] {
+            padding-top: 10px;
+            height: auto;
         }
 
         textarea {
             resize: vertical;
-            min-height: 100px; /* Taller text areas for content */
+            min-height: 100px;
         }
 
         small {
-            display: block; /* Make small text go to a new line */
+            display: block;
             margin-top: 5px;
             color: #6a6a6a;
             font-size: 0.85em;
@@ -146,7 +184,7 @@
         }
         button {
             padding: 12px 25px;
-            background-color: #28a745; /* Green for submit */
+            background-color: #28a745;
             color: white;
             border: none;
             border-radius: 6px;
@@ -157,14 +195,128 @@
             transition: background-color 0.3s ease, transform 0.2s ease;
         }
         button[type="reset"] {
-            background-color: #6c757d; /* Grey for reset */
+            background-color: #6c757d;
         }
         button:hover {
-            background-color: #218838; /* Darker green on hover */
-            transform: translateY(-2px); /* Slight lift */
+            background-color: #218838;
+            transform: translateY(-2px);
         }
         button[type="reset"]:hover {
             background-color: #5a6268;
+        }
+
+        /* Upload Progress Styling */
+        #uploadProgress {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #007bff;
+            text-align: center;
+        }
+        #uploadProgress.error {
+            color: #dc3545;
+        }
+        #uploadProgress.success {
+            color: #28a745;
+        }
+
+        /* NEW: Login Modal Styles */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1000; /* Sit on top of everything */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.5); /* Black w/ opacity */
+            padding-top: 60px;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 30px;
+            border: 1px solid #888;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 400px; /* Smaller modal for login */
+            position: relative;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            text-align: left;
+        }
+        .modal-content h3 {
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: #2c3e50;
+            font-size: 1.6em;
+            border-bottom: none; /* Remove border from login modal title */
+            padding-bottom: 0;
+        }
+
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .login-error {
+            color: #dc3545;
+            font-size: 0.9em;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        /* Responsive adjustments for mobile */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            .container {
+                padding: 20px 25px;
+                margin: 15px auto;
+            }
+            header h1 {
+                font-size: 1.6em;
+            }
+            header h2 {
+                font-size: 1.2em;
+            }
+            nav a {
+                margin: 0 8px;
+                padding: 6px 10px;
+                font-size: 0.9em;
+            }
+            label {
+                font-size: 1em;
+            }
+            input[type="text"],
+            input[type="datetime-local"],
+            textarea,
+            input[type="file"],
+            input[type="email"],
+            input[type="password"] {
+                padding: 10px;
+                font-size: 0.9em;
+            }
+            button {
+                padding: 10px 15px;
+                font-size: 0.9em;
+            }
+            .header-auth-controls {
+                position: static; /* Stack on mobile */
+                text-align: center;
+                margin-top: 10px;
+                margin-bottom: 10px;
+            }
         }
     </style>
 </head>
@@ -173,7 +325,13 @@
         <header>
             <img src="logo.png" alt="Company Logo" id="company-logo">
             <h1 id="company-name">Hariom Construction Pvt. Ltd.</h1>
-            <h2 id="project-name">Shiv Farm Residencial Bunglows </h2>
+            <h2 id="project-name">Shiv Farm Residencial Bunglows</h2>
+
+            <!-- NEW: Login/Logout Button & User Info -->
+            <div class="header-auth-controls">
+                <span id="userStatus" class="user-info">Not logged in</span>
+                <button id="authButton">Login</button>
+            </div>
         </header>
 
         <nav>
@@ -193,9 +351,10 @@
             </div>
 
             <div class="form-group">
-                <label for="imageLink">Google Drive Pic Link (Optional):</label>
-                <input type="url" id="imageLink" name="imageLink" placeholder="e.g., https://drive.google.com/drive/folders/..." >
-                <small>Ensure the link is shareable for public viewing or specific access.</small>
+                <label for="photoUpload">Upload Photos (of the day):</label>
+                <input type="file" id="photoUpload" name="photoUpload" accept="image/*" multiple>
+                <small>You can select one or more image files (JPG, PNG, GIF).</small>
+                <div id="uploadProgress"></div>
             </div>
 
             <div class="form-group">
@@ -225,13 +384,36 @@
 
             <div class="buttons">
                 <button type="reset">Clear Form</button>
-                <button type="submit">Submit Report</button>
+                <button type="submit" id="submitReportBtn">Submit Report</button>
             </div>
         </form>
     </div>
 
+    <!-- NEW: Login Modal HTML -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" id="loginModalClose">&times;</span>
+            <h3>Admin Login</h3>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="loginEmail">Email:</label>
+                    <input type="email" id="loginEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password:</label>
+                    <input type="password" id="loginPassword" required>
+                </div>
+                <div class="buttons" style="text-align: center;">
+                    <button type="submit">Login</button>
+                </div>
+                <p id="loginError" class="login-error"></p>
+            </form>
+        </div>
+    </div>
+
+
     <script>
-        // --- Firebase Configuration and Initialization ---
+        // --- Firebase Configuration and Initialization (Firestore Only) ---
         const firebaseConfig = {
             apiKey: "AIzaSyBO6c33DK2bhzPBrNiX6SeXuN2LMmLg3V8",
             authDomain: "cnst-management.firebaseapp.com",
@@ -241,17 +423,37 @@
             appId: "1:272780333903:web:3ce6a684383c43d8f26b3a"
         };
 
+
         // Initialize Firebase
         const app = firebase.initializeApp(firebaseConfig);
 
-        // Initialize Cloud Firestore and get a reference to the service
+        // Initialize Firebase services
         const db = firebase.firestore(app);
-        // --- End Firebase Config ---
+        const auth = firebase.auth(app); // NEW: Firebase Auth instance
+
+        // --- Cloudinary Configuration ---
+        const CLOUDINARY_CLOUD_NAME = "YOUR_CLOUDINARY_CLOUD_NAME";
+        const CLOUDINARY_UPLOAD_PRESET = "YOUR_CLOUDINARY_UPLOAD_PRESET_NAME";
+
+        // --- DOM Elements ---
+        const dailyReportForm = document.getElementById('dailyReportForm');
+        const dateTimeInput = document.getElementById('dateTime');
+        const photoUploadInput = document.getElementById('photoUpload');
+        const uploadProgressDiv = document.getElementById('uploadProgress');
+        const submitReportBtn = document.getElementById('submitReportBtn');
+
+        const authButton = document.getElementById('authButton'); // NEW
+        const userStatusSpan = document.getElementById('userStatus'); // NEW
+        const loginModal = document.getElementById('loginModal'); // NEW
+        const loginModalCloseBtn = document.getElementById('loginModalClose'); // NEW
+        const loginForm = document.getElementById('loginForm'); // NEW
+        const loginEmailInput = document.getElementById('loginEmail'); // NEW
+        const loginPasswordInput = document.getElementById('loginPassword'); // NEW
+        const loginErrorDiv = document.getElementById('loginError'); // NEW
 
 
-        // JavaScript to auto-populate date and time
+        // JavaScript to auto-populate date and time on load
         document.addEventListener('DOMContentLoaded', () => {
-            const dateTimeInput = document.getElementById('dateTime');
             const now = new Date();
             const year = now.getFullYear();
             const month = (now.getMonth() + 1).toString().padStart(2, '0');
@@ -273,46 +475,165 @@
             });
         });
 
+        // NEW: Firebase Authentication State Observer
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                // User is signed in.
+                userStatusSpan.textContent = `Logged in as: ${user.email}`;
+                authButton.textContent = 'Logout';
+                authButton.onclick = handleLogout;
+            } else {
+                // User is signed out.
+                userStatusSpan.textContent = 'Not logged in';
+                authButton.textContent = 'Login';
+                authButton.onclick = () => loginModal.style.display = 'block'; // Open modal on click
+            }
+        });
+
+        // NEW: Handle Login
+        loginForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            loginErrorDiv.textContent = ''; // Clear previous errors
+
+            const email = loginEmailInput.value;
+            const password = loginPasswordInput.value;
+
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+                loginModal.style.display = 'none'; // Close modal on success
+                loginForm.reset(); // Clear form fields
+            } catch (error) {
+                console.error("Login error:", error);
+                loginErrorDiv.textContent = `Login failed: ${error.message}`;
+            }
+        });
+
+        // NEW: Handle Logout
+        async function handleLogout() {
+            try {
+                await auth.signOut();
+                alert('Logged out successfully!');
+            } catch (error) {
+                console.error("Logout error:", error);
+                alert('Logout failed: ' + error.message);
+            }
+        }
+
+        // NEW: Close Login Modal
+        loginModalCloseBtn.addEventListener('click', () => {
+            loginModal.style.display = 'none';
+            loginErrorDiv.textContent = ''; // Clear error on close
+            loginForm.reset();
+        });
+
+        window.addEventListener('click', (event) => {
+            if (event.target == loginModal) {
+                loginModal.style.display = 'none';
+                loginErrorDiv.textContent = '';
+                loginForm.reset();
+            }
+        });
+
+        // Function to upload files to Cloudinary
+        async function uploadFilesToCloudinary(files) {
+            const imageUrls = [];
+            if (files.length === 0) return imageUrls;
+
+            uploadProgressDiv.className = '';
+            uploadProgressDiv.textContent = 'Uploading photos...';
+            submitReportBtn.disabled = true;
+
+            try {
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+
+                    const response = await fetch(
+                        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+                        {
+                            method: 'POST',
+                            body: formData
+                        }
+                    );
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error.message || `Cloudinary upload failed for ${file.name}`);
+                    }
+
+                    const data = await response.json();
+                    imageUrls.push(data.secure_url);
+                    uploadProgressDiv.textContent = `Uploaded photo ${i + 1}/${files.length}`;
+                }
+                uploadProgressDiv.textContent = 'Photos uploaded successfully!';
+                uploadProgressDiv.classList.add('success');
+                return imageUrls;
+            } catch (error) {
+                console.error("Error uploading photos to Cloudinary:", error);
+                uploadProgressDiv.textContent = `Upload failed: ${error.message}`;
+                uploadProgressDiv.classList.add('error');
+                throw error;
+            } finally {
+                // Submit button re-enabled in the form submission catch/finally block
+            }
+        }
+
+
         // Form submission logic to save data to Firestore
-        document.getElementById('dailyReportForm').addEventListener('submit', function(event) {
-            event.preventDefault(); // Prevent default browser form submission
+        dailyReportForm.addEventListener('submit', async function(event) {
+            event.preventDefault();
 
-            // Get form data
-            const dateTime = document.getElementById('dateTime').value;
             const workDone = document.getElementById('workDone').value;
-            const imageLink = document.getElementById('imageLink').value; // Single link for now
-            const tomorrowPlanning = document.getElementById('tomorrowPlanning').value;
-            const materialNeeds = document.getElementById('materialNeeds').value;
-            const issuesOnSite = document.getElementById('issuesOnSite').value;
-            const remarks = document.getElementById('remarks').value;
-            const checkingCallNotes = document.getElementById('checkingCallNotes').value;
+            const dateTime = dateTimeInput.value;
 
-            // Prepare data object for Firestore
-            const reportData = {
-                reportDate: new Date(dateTime), // Convert to Firestore Timestamp
-                workDone: workDone,
-                imageLinks: imageLink ? [imageLink] : [], // Store as an array, even if one link
-                tomorrowPlanning: tomorrowPlanning,
-                materialNeeds: materialNeeds,
-                issuesOnSite: issuesOnSite,
-                remarks: remarks,
-                checkingCallNotes: checkingCallNotes,
-                submittedAt: firebase.firestore.FieldValue.serverTimestamp() // Timestamp when saved
-            };
+            if (!workDone || !dateTime) {
+                alert('Please fill in required fields (Work Done and Date/Time).');
+                return;
+            }
 
-            // Add data to Firestore 'dailyReports' collection
-            db.collection('dailyReports').add(reportData)
-            .then((docRef) => {
+            submitReportBtn.disabled = true;
+            uploadProgressDiv.textContent = 'Submitting report...';
+            uploadProgressDiv.className = '';
+
+            try {
+                const selectedFiles = photoUploadInput.files;
+                const imageUrls = await uploadFilesToCloudinary(selectedFiles);
+
+                const reportData = {
+                    reportDate: new Date(dateTime),
+                    workDone: workDone,
+                    imageLinks: imageUrls,
+                    tomorrowPlanning: document.getElementById('tomorrowPlanning').value,
+                    materialNeeds: document.getElementById('materialNeeds').value,
+                    issuesOnSite: document.getElementById('issuesOnSite').value,
+                    remarks: document.getElementById('remarks').value,
+                    checkingCallNotes: document.getElementById('checkingCallNotes').value,
+                    submittedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    checkedByName: null, // Initialize as null
+                    checkedByDate: null  // Initialize as null
+                };
+
+                const docRef = await db.collection('dailyReports').add(reportData);
+
                 console.log("Document written with ID: ", docRef.id);
-                alert('Daily Report Submitted Successfully!');
-                document.getElementById('dailyReportForm').reset(); // Clear the form
-                // Re-populate date/time after reset
-                document.getElementById('dateTime').value = `${new Date().getFullYear()}-${(new Date().getMonth() + 1).toString().padStart(2, '0')}-${new Date().getDate().toString().padStart(2, '0')}T${new Date().getHours().toString().padStart(2, '0')}:${new Date().getMinutes().toString().padStart(2, '0')}`;
-            })
-            .catch((error) => {
-                console.error("Error adding document: ", error);
-                alert('Error submitting report. Please check your internet connection or try again.');
-            });
+                uploadProgressDiv.textContent = 'Daily Report Submitted Successfully!';
+                uploadProgressDiv.classList.add('success');
+                
+                dailyReportForm.reset();
+                dateTimeInput.value = `${new Date().getFullYear()}-${(new Date().getMonth() + 1).toString().padStart(2, '0')}-${new Date().getDate().toString().padStart(2, '0')}T${new Date().getHours().toString().padStart(2, '0')}:${new Date().getMinutes().toString().padStart(2, '0')}`;
+
+            } catch (error) {
+                console.error("Error submitting report:", error);
+                if (!uploadProgressDiv.classList.contains('error')) {
+                    uploadProgressDiv.textContent = `Submission failed: ${error.message}`;
+                    uploadProgressDiv.classList.add('error');
+                }
+                alert('Error submitting report. Please check the console for details and ensure Cloudinary setup is correct.');
+            } finally {
+                submitReportBtn.disabled = false;
+            }
         });
     </script>
 </body>
